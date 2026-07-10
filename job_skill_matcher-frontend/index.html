@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobSkill Matcher | Find Your Perfect Career Match</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header & Navigation -->
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <a href="#home">JobSkill<span>Matcher</span></a>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item"><a href="#home" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
+                    <li class="nav-item"><a href="#jobs" class="nav-link">Jobs</a></li>
+                    <li class="nav-item"><a href="#skills" class="nav-link">Skills</a></li>
+                    <li class="nav-item"><a href="#team" class="nav-link">Our Team</a></li>
+                    <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
+                </ul>
+                <div class="hamburger">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Find Your <span>Perfect</span> Career Match</h1>
+            <p class="hero-subtitle">Upload your resume and discover jobs that match your skills, with personalized course recommendations to bridge any gaps.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary" id="uploadBtn">Upload Resume</button>
+                <button class="btn-secondary" id="exploreJobsBtn">Explore Jobs</button>
+            </div>
+        </div>
+        <div class="hero-animation">
+            <div class="floating-card card-1">
+                <i class="fas fa-code"></i>
+                <p>Developer</p>
+            </div>
+            <div class="floating-card card-2">
+                <i class="fas fa-chart-line"></i>
+                <p>Analyst</p>
+            </div>
+            <div class="floating-card card-3">
+                <i class="fas fa-paint-brush"></i>
+                <p>Designer</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resume Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Upload Your Resume</h2>
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drag & Drop your resume here</p>
+                <p>or</p>
+                <button class="btn-primary" id="browseBtn">Browse Files</button>
+                <input type="file" id="resumeInput" accept=".pdf,.doc,.docx" style="display: none;">
+            </div>
+            <div id="uploadResult" class="upload-result" style="display: none;">
+                <h3>Analysis Complete!</h3>
+                <div class="skill-match">
+                    <h4>Your Skills:</h4>
+                    <div id="skillList" class="skill-list"></div>
+                </div>
+                <div class="job-recommendations">
+                    <h4>Recommended Jobs:</h4>
+                    <div id="jobRecommendations" class="recommendation-list scrollable"></div>
+                </div>
+                <div class="course-recommendations">
+                    <h4>Recommended Courses:</h4>
+                    <div id="courseRecommendations" class="recommendation-list scrollable"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="about-cards">
+                <div class="about-card">
+                    <div class="card-icon">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <h3>Upload Resume</h3>
+                    <p>Upload your resume in PDF or Word format for analysis.</p>
+                </div>
+                <div class="about-card">
+                    <div class="card-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Skill Analysis</h3>
+                    <p>Our AI analyzes your skills, experience, and qualifications.</p>
+                </div>
+                <div class="about-card">
+                    <div class="card-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h3>Job Matching</h3>
+                    <p>Get matched with jobs that align with your skill set.</p>
+                </div>
+                <div class="about-card">
+                    <div class="card-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Course Recommendations</h3>
+                    <p>Receive personalized course suggestions to improve your skills.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Jobs Section -->
+    <section id="jobs" class="jobs">
+        <div class="container">
+            <h2 class="section-title">Featured Job Listings</h2>
+            <div class="job-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="tech">Technology</button>
+                <button class="filter-btn" data-filter="design">Design</button>
+                <button class="filter-btn" data-filter="business">Business</button>
+                <button class="filter-btn" data-filter="marketing">Marketing</button>
+            </div>
+            <div class="job-cards" id="jobCards">
+                <!-- Job cards will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="skills">
+        <div class="container">
+            <h2 class="section-title">In-Demand Skills</h2>
+            <div class="skills-container">
+                <div class="skill-category">
+                    <h3>Technical Skills</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">JavaScript</span>
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">React</span>
+                        <span class="skill-tag">Node.js</span>
+                        <span class="skill-tag">SQL</span>
+                        <span class="skill-tag">AWS</span>
+                        <span class="skill-tag">Docker</span>
+                        <span class="skill-tag">Git</span>
+                        <span class="skill-tag">TypeScript</span>
+                        <span class="skill-tag">Java</span>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <h3>Design Skills</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">UI/UX Design</span>
+                        <span class="skill-tag">Figma</span>
+                        <span class="skill-tag">Adobe Creative Suite</span>
+                        <span class="skill-tag">Prototyping</span>
+                        <span class="skill-tag">Wireframing</span>
+                        <span class="skill-tag">User Research</span>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <h3>Business Skills</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">Project Management</span>
+                        <span class="skill-tag">Data Analysis</span>
+                        <span class="skill-tag">Strategic Planning</span>
+                        <span class="skill-tag">Financial Modeling</span>
+                        <span class="skill-tag">Market Research</span>
+                        <span class="skill-tag">Leadership</span>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <h3>Marketing Skills</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">SEO/SEM</span>
+                        <span class="skill-tag">Content Marketing</span>
+                        <span class="skill-tag">Social Media</span>
+                        <span class="skill-tag">Email Marketing</span>
+                        <span class="skill-tag">Analytics</span>
+                        <span class="skill-tag">Brand Management</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section id="team" class="team">
+        <div class="container">
+            <h2 class="section-title">Our Development Team</h2>
+            <div class="team-cards">
+                <div class="team-card">
+                    <div class="team-img">
+                        <img src="https://res.cloudinary.com/divvjukre/image/upload/v1742627598/Aakash_vtbx0q.jpg" alt="Team Member">
+                    </div>
+                    <h3>K Sai Aakash</h3>
+                    <p class="team-role">23761A5419</p>
+                    <div class="team-social">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+                <div class="team-card">
+                    <div class="team-img">
+                        <img src="https://res.cloudinary.com/dykjcexiv/image/upload/v1757313640/mani_ejfsev.jpg " alt="Team Member">
+                    </div>
+                    <h3>M Mani Sankar Sai</h3>
+                    <p class="team-role">23761A5431</p>
+                    <div class="team-social">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+                <div class="team-card">
+                    <div class="team-img">
+                        <img src="https://res.cloudinary.com/dykjcexiv/image/upload/v1757313413/koushik_ssmldc.jpg " alt="Team Member">
+                    </div>
+                    <h3>P Koushik Chowdary</h3>
+                    <p class="team-role">23761A5435</p>
+                    <div class="team-social">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+                <div class="team-card">
+                    <div class="team-img">
+                        <img src="https://res.cloudinary.com/divvjukre/image/upload/v1761977460/WhatsApp_Image_2025-11-01_at_11.32.57_45d04cd3_uucux8.jpg" alt="Team Member">
+                    </div>
+                    <h3>P Geetha Sri</h3>
+                    <p class="team-role">23761A5440</p>
+                    <div class="team-social">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h3>Our Location</h3>
+                            <p>123 Tech Street, San Francisco, CA 94103</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h3>Phone Number</h3>
+                            <p>+1 (555) 123-4567</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h3>Email Address</h3>
+                            <p>info@jobskillmatcher.com</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <input type="text" id="name" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="message" rows="5" placeholder="Your Message" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>JobSkill Matcher</h3>
+                    <p>Connecting talent with opportunity through intelligent skill matching.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#jobs">Jobs</a></li>
+                        <li><a href="#skills">Skills</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#">Career Tips</a></li>
+                        <li><a href="#">Skill Development</a></li>
+                        <li><a href="#">Interview Prep</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Subscribe</h4>
+                    <p>Stay updated with the latest job opportunities</p>
+                    <form class="subscribe-form">
+                        <input type="email" placeholder="Your Email">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 JobSkill Matcher. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
