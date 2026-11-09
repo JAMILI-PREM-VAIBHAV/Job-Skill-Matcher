@@ -660,6 +660,31 @@ header {
     object-fit: cover;
 }
 
+.team-cards {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.team-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    border: 5px solid var(--light-gray);
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+.team-card h3 {
+    margin-bottom: 20px;
+}
+
 .team-role {
     color: var(--primary-color);
     font-weight: 500;
@@ -1249,4 +1274,159 @@ header {
     .job-title {
         font-size: 1.2rem;
     }
+}
+
+/* ==========================================================================
+   Scroll reveal animations (previously injected from script.js)
+   ========================================================================== */
+.about-card, .job-card, .skill-category, .team-card {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.about-card.animate-in, .job-card.animate-in,
+.skill-category.animate-in, .team-card.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.about-card:nth-child(2), .team-card:nth-child(2), .job-card:nth-child(3n+2) { transition-delay: 0.1s; }
+.about-card:nth-child(3), .team-card:nth-child(3), .job-card:nth-child(3n) { transition-delay: 0.2s; }
+.about-card:nth-child(4), .team-card:nth-child(4) { transition-delay: 0.3s; }
+
+@media (prefers-reduced-motion: reduce) {
+    .about-card, .job-card, .skill-category, .team-card {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
+
+/* ==========================================================================
+   Toasts
+   ========================================================================== */
+.toast {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    max-width: 360px;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    color: white;
+    background: var(--primary-color);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+}
+
+.toast-success { background: var(--success-color); }
+.toast-error { background: var(--danger-color); }
+.toast-leaving { animation: slideOutRight 0.3s ease forwards; }
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+/* ==========================================================================
+   Modals, forms & buttons
+   ========================================================================== */
+body.modal-open { overflow: hidden; }
+
+.modal-narrow { max-width: 500px; }
+
+.application-form { margin-top: 20px; }
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.btn-block {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.btn-small {
+    margin-top: 10px;
+    padding: 5px 12px;
+    font-size: 0.8rem;
+}
+
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.save-btn.saved {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* ==========================================================================
+   Resume upload & results
+   ========================================================================== */
+.upload-area.drag-over {
+    border-color: var(--primary-color);
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+.upload-hint {
+    margin: 12px 0 0;
+    font-size: 0.85rem;
+    color: var(--gray-color);
+}
+
+.recommendation-list .recommendation-item { width: 100%; }
+
+.scrollable { max-height: 280px; }
+
+.recommendation-item h4 { margin-bottom: 0.4rem; }
+.recommendation-item p { margin-bottom: 0.4rem; }
+
+.recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.match-badge {
+    flex-shrink: 0;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+}
+
+.match-high { background: var(--success-color); }
+.match-medium { background: #f4a100; }
+.match-low { background: var(--gray-color); }
+
+.skill-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.85rem;
+}
+
+.skill-breakdown .have { color: var(--success-color); }
+.skill-breakdown .missing { color: var(--danger-color); }
+.skill-breakdown .learn { color: var(--secondary-color); }
+
+.recommendation-item .fa-star { color: #f4a100; }
+
+.empty-note {
+    color: var(--gray-color);
+    font-size: 0.95rem;
 }

@@ -1,198 +1,212 @@
-// DOM Content Loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize the application
-    initApp();
+// ===========================================================================
+// Config
+// ===========================================================================
+
+// When the page is served by the backend (http://localhost:3000) API calls go
+// to the same origin. When index.html is opened directly from disk, fall back
+// to the local backend.
+const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+const state = {
+    jobs: [],
+    savedJobIds: new Set(JSON.parse(localStorage.getItem('savedJobs') || '[]'))
+};
+
+let revealObserver;
+
+document.addEventListener('DOMContentLoaded', () => {
+    initRevealAnimations();
+    initNavigation();
+    initResumeUpload();
+    initJobFilters();
+    initContactForm();
+    initSubscribeForm();
+    document.getElementById('year').textContent = new Date().getFullYear();
+    loadJobs();
 });
 
-// Initialize the application
-function initApp() {
-    // Initialize job listings
-    initJobs();
-    
-    // Initialize event listeners
-    initEventListeners();
-    
-    // Initialize animations
-    initAnimations();
+// ===========================================================================
+// Helpers
+// ===========================================================================
+
+/** Escapes text so it can be safely inserted into innerHTML. */
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
-// Initialize job listings
-function initJobs() {
-    // Sample job data
-    const jobs = [
-        {
-            id: 1,
-            title: "Frontend Developer",
-            company: "TechCorp Inc.",
-            location: "San Francisco, CA",
-            type: "Full-time",
-            category: "tech",
-            description: "We are looking for a skilled Frontend Developer to join our team. You will be responsible for building responsive web applications using modern JavaScript frameworks.",
-            skills: ["JavaScript", "React", "HTML", "CSS", "TypeScript", "Redux"],
-            salary: "$90,000 - $120,000",
-            posted: "2 days ago"
-        },
-        {
-            id: 2,
-            title: "UX/UI Designer",
-            company: "DesignStudio",
-            location: "Remote",
-            type: "Full-time",
-            category: "design",
-            description: "Join our design team to create beautiful and intuitive user interfaces for our products. Work closely with product managers and developers.",
-            skills: ["Figma", "UI Design", "UX Research", "Prototyping", "Wireframing"],
-            salary: "$75,000 - $100,000",
-            posted: "1 week ago"
-        },
-        {
-            id: 3,
-            title: "Data Analyst",
-            company: "DataInsights",
-            location: "New York, NY",
-            type: "Full-time",
-            category: "business",
-            description: "Analyze complex datasets to provide insights that drive business decisions. Create dashboards and reports for stakeholders.",
-            skills: ["SQL", "Python", "Data Visualization", "Statistics", "Excel", "Tableau"],
-            salary: "$80,000 - $110,000",
-            posted: "3 days ago"
-        },
-        {
-            id: 4,
-            title: "Digital Marketing Specialist",
-            company: "MarketGrow",
-            location: "Chicago, IL",
-            type: "Full-time",
-            category: "marketing",
-            description: "Develop and implement digital marketing strategies to increase brand awareness and drive sales across multiple channels.",
-            skills: ["SEO", "Content Marketing", "Social Media", "Google Analytics", "Email Marketing"],
-            salary: "$65,000 - $85,000",
-            posted: "5 days ago"
-        },
-        {
-            id: 5,
-            title: "Backend Developer",
-            company: "ServerTech",
-            location: "Austin, TX",
-            type: "Full-time",
-            category: "tech",
-            description: "Build scalable server-side applications and APIs for our platform. Work with modern cloud technologies and microservices architecture.",
-            skills: ["Node.js", "Python", "MongoDB", "AWS", "Docker", "Redis"],
-            salary: "$95,000 - $130,000",
-            posted: "1 day ago"
-        },
-        {
-            id: 6,
-            title: "Product Manager",
-            company: "ProductLabs",
-            location: "Boston, MA",
-            type: "Full-time",
-            category: "business",
-            description: "Lead product development from conception to launch, working with cross-functional teams to deliver exceptional user experiences.",
-            skills: ["Product Strategy", "Agile", "User Research", "Roadmapping", "Analytics", "JIRA"],
-            salary: "$100,000 - $140,000",
-            posted: "4 days ago"
-        },
-        {
-            id: 7,
-            title: "Graphic Designer",
-            company: "CreativeMinds",
-            location: "Los Angeles, CA",
-            type: "Contract",
-            category: "design",
-            description: "Create visual concepts to communicate ideas that inspire, inform, and captivate consumers across various media platforms.",
-            skills: ["Adobe Creative Suite", "Illustration", "Branding", "Typography", "Layout", "Photoshop"],
-            salary: "$60,000 - $80,000",
-            posted: "2 weeks ago"
-        },
-        {
-            id: 8,
-            title: "SEO Specialist",
-            company: "SearchOptimize",
-            location: "Remote",
-            type: "Full-time",
-            category: "marketing",
-            description: "Optimize website content and structure to improve search engine rankings and drive organic traffic through data-driven strategies.",
-            skills: ["SEO", "Keyword Research", "Content Strategy", "Google Analytics", "Technical SEO", "Ahrefs"],
-            salary: "$70,000 - $90,000",
-            posted: "6 days ago"
-        },
-        {
-            id: 9,
-            title: "DevOps Engineer",
-            company: "CloudSystems",
-            location: "Seattle, WA",
-            type: "Full-time",
-            category: "tech",
-            description: "Implement and maintain CI/CD pipelines and cloud infrastructure for our applications. Ensure high availability and performance.",
-            skills: ["AWS", "Docker", "Kubernetes", "Jenkins", "Terraform", "Linux"],
-            salary: "$110,000 - $150,000",
-            posted: "3 days ago"
-        },
-        {
-            id: 10,
-            title: "Content Strategist",
-            company: "ContentFirst",
-            location: "Remote",
-            type: "Full-time",
-            category: "marketing",
-            description: "Develop content strategies that engage audiences and drive business goals across multiple platforms and channels.",
-            skills: ["Content Strategy", "SEO", "Copywriting", "Analytics", "Social Media", "CMS"],
-            salary: "$70,000 - $95,000",
-            posted: "1 week ago"
-        }
-    ];
-    
-    // Store jobs globally for filtering
-    window.allJobs = jobs;
-    
-    // Render job cards
-    renderJobCards(jobs);
-    
-    // Set up job filtering
-    setupJobFiltering();
+/**
+ * Calls the backend and returns the parsed JSON body. Throws an Error with a
+ * user-friendly message if the server is unreachable or returns an error.
+ */
+async function api(path, options = {}) {
+    let response;
+    try {
+        response = await fetch(API_BASE + path, options);
+    } catch {
+        throw new Error('Cannot reach the server. Make sure the backend is running (npm start).');
+    }
+
+    let body = null;
+    try {
+        body = await response.json();
+    } catch {
+        // Non-JSON response; handled below.
+    }
+
+    if (!response.ok || !body || body.success === false) {
+        throw new Error(body?.message || `Request failed (${response.status}).`);
+    }
+    return body;
 }
 
-// Render job cards
+function postJson(path, data) {
+    return api(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+}
+
+/** Disables a submit button and shows a spinner until `task` settles. */
+async function withLoadingButton(button, loadingText, task) {
+    const original = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${escapeHtml(loadingText)}`;
+    try {
+        return await task();
+    } finally {
+        button.disabled = false;
+        button.innerHTML = original;
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.setAttribute('role', 'status');
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('toast-leaving');
+        toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    }, 3500);
+}
+
+// ===========================================================================
+// Navigation
+// ===========================================================================
+
+function initNavigation() {
+    const hamburger = document.querySelector('.hamburger');
+    const navMenu = document.querySelector('.nav-menu');
+
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
+    });
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+        });
+    });
+
+    document.getElementById('exploreJobsBtn').addEventListener('click', () => {
+        document.getElementById('jobs').scrollIntoView({ behavior: 'smooth' });
+    });
+}
+
+// ===========================================================================
+// Jobs
+// ===========================================================================
+
+async function loadJobs() {
+    const container = document.getElementById('jobCards');
+    container.innerHTML = `
+        <div class="no-jobs">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h3>Loading jobs...</h3>
+        </div>`;
+
+    try {
+        const { data } = await api('/api/jobs');
+        state.jobs = data;
+        renderJobCards(currentFilteredJobs());
+    } catch (err) {
+        container.innerHTML = `
+            <div class="no-jobs">
+                <i class="fas fa-plug"></i>
+                <h3>Couldn't load jobs</h3>
+                <p>${escapeHtml(err.message)}</p>
+                <button class="btn-secondary" id="retryJobsBtn">Try again</button>
+            </div>`;
+        document.getElementById('retryJobsBtn').addEventListener('click', loadJobs);
+    }
+}
+
+function currentFilteredJobs() {
+    const active = document.querySelector('.filter-btn.active');
+    const filter = active ? active.dataset.filter : 'all';
+    return filter === 'all' ? state.jobs : state.jobs.filter(job => job.category === filter);
+}
+
+function initJobFilters() {
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            buttons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            renderJobCards(currentFilteredJobs());
+        });
+    });
+}
+
 function renderJobCards(jobs) {
-    const jobCards = document.getElementById('jobCards');
-    jobCards.innerHTML = '';
-    
+    const container = document.getElementById('jobCards');
+
     if (jobs.length === 0) {
-        jobCards.innerHTML = `
+        container.innerHTML = `
             <div class="no-jobs">
                 <i class="fas fa-search"></i>
                 <h3>No Jobs Found</h3>
-                <p>Try adjusting your filters or search criteria</p>
-            </div>
-        `;
+                <p>Try a different category.</p>
+            </div>`;
         return;
     }
-    
-    jobs.forEach(job => {
-        const jobCard = document.createElement('div');
-        jobCard.className = `job-card ${job.category}`;
-        jobCard.innerHTML = `
+
+    container.innerHTML = jobs.map(job => {
+        const saved = state.savedJobIds.has(job.id);
+        return `
+        <div class="job-card ${escapeHtml(job.category)}">
             <div class="job-header">
-                <span class="job-category-badge ${job.category}-badge">${job.category}</span>
-                <h3 class="job-title">${job.title}</h3>
-                <p class="job-company">${job.company}</p>
+                <span class="job-category-badge ${escapeHtml(job.category)}-badge">${escapeHtml(job.category)}</span>
+                <h3 class="job-title">${escapeHtml(job.title)}</h3>
+                <p class="job-company">${escapeHtml(job.company)}</p>
                 <div class="job-meta">
-                    <span><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
-                    <span><i class="fas fa-clock"></i> ${job.type}</span>
-                    <span><i class="fas fa-calendar"></i> ${job.posted}</span>
+                    <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(job.location)}</span>
+                    <span><i class="fas fa-clock"></i> ${escapeHtml(job.type)}</span>
+                    <span><i class="fas fa-calendar"></i> ${escapeHtml(job.posted)}</span>
                 </div>
             </div>
             <div class="job-body">
-                <p class="job-description">${job.description}</p>
+                <p class="job-description">${escapeHtml(job.description)}</p>
                 <div class="job-skills">
-                    ${job.skills.map(skill => `<span class="job-skill">${skill}</span>`).join('')}
+                    ${job.skills.map(skill => `<span class="job-skill">${escapeHtml(skill)}</span>`).join('')}
                 </div>
             </div>
             <div class="job-footer">
-                <span class="job-salary">${job.salary}</span>
+                <span class="job-salary">${escapeHtml(job.salary)}</span>
                 <div class="job-actions">
-                    <button class="save-btn" data-id="${job.id}" title="Save Job">
-                        <i class="far fa-bookmark"></i>
+                    <button class="save-btn ${saved ? 'saved' : ''}" data-id="${job.id}"
+                            title="${saved ? 'Remove from saved' : 'Save job'}" aria-pressed="${saved}">
+                        <i class="${saved ? 'fas' : 'far'} fa-bookmark"></i>
                     </button>
                     <button class="apply-btn" data-id="${job.id}">
                         <i class="fas fa-paper-plane"></i>
@@ -200,541 +214,318 @@ function renderJobCards(jobs) {
                     </button>
                 </div>
             </div>
-        `;
-        jobCards.appendChild(jobCard);
-    });
-    
-    // Add event listeners to apply buttons
-    document.querySelectorAll('.apply-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const jobId = this.getAttribute('data-id');
-            const job = window.allJobs.find(j => j.id == jobId);
-            if (job) {
-                showApplicationModal(job);
-            }
+        </div>`;
+    }).join('');
+
+    container.querySelectorAll('.apply-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const job = state.jobs.find(j => j.id === Number(button.dataset.id));
+            if (job) showApplicationModal(job);
         });
     });
-    
-    // Add event listeners to save buttons
-    document.querySelectorAll('.save-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const jobId = this.getAttribute('data-id');
-            const job = window.allJobs.find(j => j.id == jobId);
-            if (job) {
-                toggleSaveJob(job, this);
-            }
+
+    container.querySelectorAll('.save-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const job = state.jobs.find(j => j.id === Number(button.dataset.id));
+            if (job) toggleSaveJob(job, button);
         });
     });
+
+    container.querySelectorAll('.job-card').forEach(card => revealObserver.observe(card));
 }
 
-// Show application modal
+function toggleSaveJob(job, button) {
+    const icon = button.querySelector('i');
+    const nowSaved = !state.savedJobIds.has(job.id);
+
+    if (nowSaved) state.savedJobIds.add(job.id);
+    else state.savedJobIds.delete(job.id);
+    localStorage.setItem('savedJobs', JSON.stringify([...state.savedJobIds]));
+
+    button.classList.toggle('saved', nowSaved);
+    button.setAttribute('aria-pressed', nowSaved);
+    button.title = nowSaved ? 'Remove from saved' : 'Save job';
+    icon.classList.toggle('fas', nowSaved);
+    icon.classList.toggle('far', !nowSaved);
+
+    showToast(nowSaved ? `Saved: ${job.title}` : `Removed: ${job.title}`, nowSaved ? 'success' : 'info');
+}
+
+// ===========================================================================
+// Job application modal
+// ===========================================================================
+
 function showApplicationModal(job) {
-    // Create modal for job application
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.style.display = 'block';
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 500px;">
-            <span class="close">&times;</span>
-            <h2>Apply for ${job.title}</h2>
-            <p><strong>Company:</strong> ${job.company}</p>
-            <p><strong>Location:</strong> ${job.location}</p>
-            <p><strong>Salary:</strong> ${job.salary}</p>
-            
-            <form id="applicationForm" style="margin-top: 20px;">
+        <div class="modal-content modal-narrow" role="dialog" aria-modal="true" aria-labelledby="applyTitle">
+            <span class="close" aria-label="Close">&times;</span>
+            <h2 id="applyTitle">Apply for ${escapeHtml(job.title)}</h2>
+            <p><strong>Company:</strong> ${escapeHtml(job.company)}</p>
+            <p><strong>Location:</strong> ${escapeHtml(job.location)}</p>
+            <p><strong>Salary:</strong> ${escapeHtml(job.salary)}</p>
+
+            <form class="application-form" novalidate>
                 <div class="form-group">
                     <label for="applicantName">Full Name</label>
-                    <input type="text" id="applicantName" placeholder="Enter your full name" required>
+                    <input type="text" id="applicantName" name="name" placeholder="Enter your full name" required>
                 </div>
                 <div class="form-group">
                     <label for="applicantEmail">Email</label>
-                    <input type="email" id="applicantEmail" placeholder="Enter your email" required>
+                    <input type="email" id="applicantEmail" name="email" placeholder="Enter your email" required>
                 </div>
                 <div class="form-group">
-                    <label for="applicantResume">Upload Resume</label>
-                    <input type="file" id="applicantResume" accept=".pdf,.doc,.docx" required>
+                    <label for="applicantResume">Upload Resume (PDF or .docx, max 5MB)</label>
+                    <input type="file" id="applicantResume" name="resume" accept=".pdf,.docx" required>
                 </div>
                 <div class="form-group">
                     <label for="coverLetter">Cover Letter</label>
-                    <textarea id="coverLetter" rows="4" placeholder="Why are you interested in this position?" required></textarea>
+                    <textarea id="coverLetter" name="coverLetter" rows="4" placeholder="Why are you interested in this position?" required></textarea>
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 20px;">
-                    Submit Application
-                </button>
+                <button type="submit" class="btn-primary btn-block">Submit Application</button>
             </form>
-        </div>
-    `;
-    
+        </div>`;
+
     document.body.appendChild(modal);
-    
-    // Close modal functionality
-    const closeBtn = modal.querySelector('.close');
-    closeBtn.addEventListener('click', function() {
-        document.body.removeChild(modal);
-    });
-    
-    // Close when clicking outside
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            document.body.removeChild(modal);
+    document.body.classList.add('modal-open');
+    modal.querySelector('#applicantName').focus();
+
+    const close = () => {
+        modal.remove();
+        document.removeEventListener('keydown', onKeydown);
+        if (!document.querySelector('.modal[style*="block"]')) document.body.classList.remove('modal-open');
+    };
+    const onKeydown = e => { if (e.key === 'Escape') close(); };
+
+    modal.querySelector('.close').addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    document.addEventListener('keydown', onKeydown);
+
+    const form = modal.querySelector('form');
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!form.reportValidity()) return;
+
+        const formData = new FormData(form);
+        formData.append('jobId', job.id);
+
+        try {
+            const result = await withLoadingButton(form.querySelector('button[type="submit"]'), 'Submitting...', () =>
+                api('/api/apply', { method: 'POST', body: formData })
+            );
+            showToast(result.message, 'success');
+            close();
+        } catch (err) {
+            showToast(err.message, 'error');
         }
     });
-    
-    // Form submission
-    const form = modal.querySelector('#applicationForm');
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        alert(`Application submitted for ${job.title} at ${job.company}!`);
-        document.body.removeChild(modal);
-    });
 }
 
-// Toggle save job
-function toggleSaveJob(job, button) {
-    const icon = button.querySelector('i');
-    if (icon.classList.contains('far')) {
-        icon.classList.remove('far');
-        icon.classList.add('fas');
-        button.style.color = 'var(--primary-color)';
-        button.style.borderColor = 'var(--primary-color)';
-        showToast(`Saved: ${job.title}`, 'success');
-    } else {
-        icon.classList.remove('fas');
-        icon.classList.add('far');
-        button.style.color = 'var(--gray-color)';
-        button.style.borderColor = 'var(--light-gray)';
-        showToast(`Removed: ${job.title}`, 'info');
-    }
-}
+// ===========================================================================
+// Resume upload & analysis
+// ===========================================================================
 
-// Show toast notification
-function showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? 'var(--success-color)' : 'var(--primary-color)'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
-    `;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 300);
-    }, 3000);
-}
+const ACCEPTED_EXTENSIONS = ['.pdf', '.docx'];
+const MAX_RESUME_SIZE = 5 * 1024 * 1024;
 
-// Set up job filtering
-function setupJobFiltering() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // Remove active class from all buttons
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // Add active class to clicked button
-            this.classList.add('active');
-            
-            // Get filter category
-            const filter = this.getAttribute('data-filter');
-            
-            // Filter jobs
-            let filteredJobs;
-            if (filter === 'all') {
-                filteredJobs = window.allJobs;
-            } else {
-                filteredJobs = window.allJobs.filter(job => job.category === filter);
-            }
-            
-            // Render filtered jobs
-            renderJobCards(filteredJobs);
-        });
-    });
-}
-
-// Rest of the JavaScript remains the same as previous version...
-// (initEventListeners, handleResumeUpload, displayUploadResult, resetUploadResult, initAnimations functions)
-
-// Initialize event listeners
-function initEventListeners() {
-    // Mobile menu toggle
-    const hamburger = document.querySelector('.hamburger');
-    const navMenu = document.querySelector('.nav-menu');
-    
-    hamburger.addEventListener('click', function() {
-        hamburger.classList.toggle('active');
-        navMenu.classList.toggle('active');
-    });
-    
-    // Close mobile menu when clicking on a link
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', function() {
-            hamburger.classList.remove('active');
-            navMenu.classList.remove('active');
-        });
-    });
-    
-    // Resume upload modal
-    const uploadBtn = document.getElementById('uploadBtn');
-    const exploreJobsBtn = document.getElementById('exploreJobsBtn');
+function initResumeUpload() {
     const modal = document.getElementById('uploadModal');
-    const closeBtn = document.querySelector('.close');
     const uploadArea = document.getElementById('uploadArea');
-    const browseBtn = document.getElementById('browseBtn');
     const resumeInput = document.getElementById('resumeInput');
-    
-    // Open modal
-    uploadBtn.addEventListener('click', function() {
+
+    const open = () => {
         modal.style.display = 'block';
-    });
-    
-    // Explore jobs button
-    exploreJobsBtn.addEventListener('click', function() {
-        document.getElementById('jobs').scrollIntoView({ behavior: 'smooth' });
-    });
-    
-    // Close modal
-    closeBtn.addEventListener('click', function() {
+        document.body.classList.add('modal-open');
+    };
+    const close = () => {
         modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
         resetUploadResult();
+    };
+
+    document.getElementById('uploadBtn').addEventListener('click', open);
+    modal.querySelector('.close').addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.style.display === 'block') close();
     });
-    
-    // Close modal when clicking outside
-    window.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-            resetUploadResult();
-        }
+
+    // The browse button is re-rendered, so listen on the container instead.
+    uploadArea.addEventListener('click', e => {
+        if (e.target.closest('#browseBtn')) resumeInput.click();
     });
-    
-    // Browse files button
-    browseBtn.addEventListener('click', function() {
-        resumeInput.click();
+
+    resumeInput.addEventListener('change', () => {
+        if (resumeInput.files[0]) handleResumeUpload(resumeInput.files[0]);
+        resumeInput.value = ''; // allow re-selecting the same file
     });
-    
-    // File input change
-    resumeInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            handleResumeUpload(this.files[0]);
-        }
-    });
-    
-    // Drag and drop functionality
-    uploadArea.addEventListener('dragover', function(e) {
+
+    uploadArea.addEventListener('dragover', e => {
         e.preventDefault();
-        this.style.borderColor = '#4361ee';
-        this.style.backgroundColor = 'rgba(67, 97, 238, 0.05)';
+        uploadArea.classList.add('drag-over');
     });
-    
-    uploadArea.addEventListener('dragleave', function() {
-        this.style.borderColor = '#e9ecef';
-        this.style.backgroundColor = 'transparent';
-    });
-    
-    uploadArea.addEventListener('drop', function(e) {
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+    uploadArea.addEventListener('drop', e => {
         e.preventDefault();
-        this.style.borderColor = '#e9ecef';
-        this.style.backgroundColor = 'transparent';
-        
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleResumeUpload(e.dataTransfer.files[0]);
-        }
-    });
-    
-    // Contact form submission
-    const contactForm = document.getElementById('contactForm');
-    contactForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Get form values
-        const name = document.getElementById('name').value;
-        const email = document.getElementById('email').value;
-        const message = document.getElementById('message').value;
-        
-        // In a real application, you would send this data to a server
-        console.log('Contact form submitted:', { name, email, message });
-        
-        // Show success message
-        alert('Thank you for your message! We will get back to you soon.');
-        
-        // Reset form
-        contactForm.reset();
+        uploadArea.classList.remove('drag-over');
+        if (e.dataTransfer.files[0]) handleResumeUpload(e.dataTransfer.files[0]);
     });
 }
 
-// Handle resume upload
-function handleResumeUpload(file) {
-    // Validate file type
-    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    
-    if (!validTypes.includes(file.type)) {
-        alert('Please upload a PDF or Word document.');
+function setUploadAreaIdle(message = 'Drag & Drop your resume here') {
+    document.getElementById('uploadArea').innerHTML = `
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>${escapeHtml(message)}</p>
+        <p>or</p>
+        <button class="btn-primary" id="browseBtn" type="button">Browse Files</button>
+        <p class="upload-hint">PDF or Word (.docx), up to 5MB</p>`;
+}
+
+async function handleResumeUpload(file) {
+    const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+    if (!ACCEPTED_EXTENSIONS.includes(ext)) {
+        showToast('Please upload a PDF or Word (.docx) document.', 'error');
         return;
     }
-    
-    // Show loading state
+    if (file.size > MAX_RESUME_SIZE) {
+        showToast('File too large. Maximum size is 5MB.', 'error');
+        return;
+    }
+
     const uploadArea = document.getElementById('uploadArea');
-    uploadArea.innerHTML = '<i class="fas fa-spinner fa-spin"></i><p>Analyzing your resume...</p>';
-    
-    // Simulate processing delay
-    setTimeout(() => {
-        // In a real application, you would send the file to a server for processing
-        // For this demo, we'll simulate the response
-        
-        // Sample extracted skills (in a real app, this would come from the backend)
-        const extractedSkills = ['JavaScript', 'React', 'HTML', 'CSS', 'Node.js', 'Git'];
-        
-        // Sample job recommendations
-        const jobRecommendations = [
-            {
-                title: 'Frontend Developer',
-                company: 'TechCorp Inc.',
-                match: '95%'
-            },
-            {
-                title: 'Full Stack Developer',
-                company: 'WebSolutions',
-                match: '88%'
-            },
-            {
-                title: 'UI Developer',
-                company: 'DesignTech',
-                match: '82%'
-            },
-            {
-                title: 'JavaScript Developer',
-                company: 'CodeMasters',
-                match: '90%'
-            },
-            {
-                title: 'React Developer',
-                company: 'ReactExperts',
-                match: '94%'
-            }
-        ];
-        
-        // Sample course recommendations
-        const courseRecommendations = [
-            {
-                title: 'Advanced React Patterns',
-                provider: 'Udemy',
-                duration: '12 hours'
-            },
-            {
-                title: 'Node.js Microservices',
-                provider: 'Coursera',
-                duration: '4 weeks'
-            },
-            {
-                title: 'AWS Certified Developer',
-                provider: 'AWS Training',
-                duration: '6 weeks'
-            },
-            {
-                title: 'Modern JavaScript ES6+',
-                provider: 'Pluralsight',
-                duration: '8 hours'
-            },
-            {
-                title: 'Full Stack Development',
-                provider: 'edX',
-                duration: '12 weeks'
-            }
-        ];
-        
-        // Display results
-        displayUploadResult(extractedSkills, jobRecommendations, courseRecommendations);
-    }, 2000);
+    document.getElementById('uploadResult').style.display = 'none';
+    uploadArea.innerHTML = `<i class="fas fa-spinner fa-spin"></i><p>Analyzing ${escapeHtml(file.name)}...</p>`;
+
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    try {
+        const { data } = await api('/api/analyze-resume', { method: 'POST', body: formData });
+        setUploadAreaIdle('Want to try another resume? Drop it here');
+        displayUploadResult(data);
+    } catch (err) {
+        setUploadAreaIdle('Drag & Drop your resume here');
+        showToast(err.message, 'error');
+    }
 }
 
-// Display upload results
-function displayUploadResult(skills, jobs, courses) {
-    const uploadResult = document.getElementById('uploadResult');
+function displayUploadResult({ skills, jobRecommendations, courseRecommendations }) {
     const skillList = document.getElementById('skillList');
-    const jobRecommendations = document.getElementById('jobRecommendations');
-    const courseRecommendations = document.getElementById('courseRecommendations');
-    
-    // Populate skills
-    skillList.innerHTML = '';
-    skills.forEach(skill => {
-        const skillElement = document.createElement('span');
-        skillElement.className = 'skill-tag';
-        skillElement.textContent = skill;
-        skillList.appendChild(skillElement);
-    });
-    
-    // Populate job recommendations
-    jobRecommendations.innerHTML = '';
-    jobs.forEach(job => {
-        const jobElement = document.createElement('div');
-        jobElement.className = 'recommendation-item';
-        jobElement.innerHTML = `
-            <h4>${job.title}</h4>
-            <p>${job.company} • Match: ${job.match}</p>
-            <button class="btn-primary apply-recommendation-btn" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">Apply</button>
-        `;
-        jobRecommendations.appendChild(jobElement);
-    });
-    
-    // Add event listeners to apply buttons in recommendations
-    document.querySelectorAll('.apply-recommendation-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const jobTitle = this.parentElement.querySelector('h4').textContent;
-            alert(`Applying for: ${jobTitle}`);
+    const jobList = document.getElementById('jobRecommendations');
+    const courseList = document.getElementById('courseRecommendations');
+
+    skillList.innerHTML = skills.length
+        ? skills.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join('')
+        : '<p class="empty-note">We couldn\'t find any skills we recognise. Try listing your skills clearly in a "Skills" section.</p>';
+
+    jobList.innerHTML = jobRecommendations.length
+        ? jobRecommendations.map(job => `
+            <div class="recommendation-item">
+                <div class="recommendation-header">
+                    <h4>${escapeHtml(job.title)}</h4>
+                    <span class="match-badge ${matchLevel(job.match)}">${job.match}% match</span>
+                </div>
+                <p>${escapeHtml(job.company)} &bull; ${escapeHtml(job.location)}</p>
+                <p class="skill-breakdown">
+                    <span class="have"><i class="fas fa-check"></i> ${job.matchingSkills.map(escapeHtml).join(', ')}</span>
+                    ${job.missingSkills.length ? `<span class="missing"><i class="fas fa-times"></i> ${job.missingSkills.map(escapeHtml).join(', ')}</span>` : ''}
+                </p>
+                <button class="btn-primary btn-small apply-recommendation-btn" data-id="${job.id}">Apply</button>
+            </div>`).join('')
+        : '<p class="empty-note">No matching jobs yet. The courses below can help you build in-demand skills.</p>';
+
+    courseList.innerHTML = courseRecommendations.length
+        ? courseRecommendations.map(course => `
+            <div class="recommendation-item">
+                <h4>${escapeHtml(course.title)}</h4>
+                <p>${escapeHtml(course.provider)} &bull; ${escapeHtml(course.duration)} &bull; ${escapeHtml(course.level)} &bull; ${escapeHtml(course.price)}
+                   &bull; <i class="fas fa-star"></i> ${course.rating}</p>
+                ${course.teachesSkills.length ? `<p class="skill-breakdown"><span class="learn">Learn: ${course.teachesSkills.map(escapeHtml).join(', ')}</span></p>` : ''}
+                <a class="btn-secondary btn-small" href="${escapeHtml(course.url)}" target="_blank" rel="noopener noreferrer">View Course</a>
+            </div>`).join('')
+        : '<p class="empty-note">You already have every skill our courses teach. Nice!</p>';
+
+    jobList.querySelectorAll('.apply-recommendation-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const job = jobRecommendations.find(j => j.id === Number(button.dataset.id));
+            if (job) showApplicationModal(job);
         });
     });
-    
-    // Populate course recommendations
-    courseRecommendations.innerHTML = '';
-    courses.forEach(course => {
-        const courseElement = document.createElement('div');
-        courseElement.className = 'recommendation-item';
-        courseElement.innerHTML = `
-            <h4>${course.title}</h4>
-            <p>${course.provider} • ${course.duration}</p>
-            <button class="btn-secondary view-course-btn" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">View Course</button>
-        `;
-        courseRecommendations.appendChild(courseElement);
-    });
-    
-    // Add event listeners to view course buttons
-    document.querySelectorAll('.view-course-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const courseTitle = this.parentElement.querySelector('h4').textContent;
-            alert(`Viewing course: ${courseTitle}`);
-        });
-    });
-    
-    // Show results
+
+    const uploadResult = document.getElementById('uploadResult');
     uploadResult.style.display = 'block';
-    
-    // Scroll to results
     uploadResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Reset upload result
+function matchLevel(percent) {
+    if (percent >= 70) return 'match-high';
+    if (percent >= 40) return 'match-medium';
+    return 'match-low';
+}
+
 function resetUploadResult() {
-    const uploadResult = document.getElementById('uploadResult');
-    const uploadArea = document.getElementById('uploadArea');
-    
-    uploadResult.style.display = 'none';
-    uploadArea.innerHTML = `
-        <i class="fas fa-cloud-upload-alt"></i>
-        <p>Drag & Drop your resume here</p>
-        <p>or</p>
-        <button class="btn-primary" id="browseBtn">Browse Files</button>
-    `;
-    
-    // Reattach event listeners to the new button
-    const newButton = document.getElementById('browseBtn');
-    const resumeInput = document.getElementById('resumeInput');
-    
-    newButton.addEventListener('click', function() {
-        resumeInput.click();
+    document.getElementById('uploadResult').style.display = 'none';
+    setUploadAreaIdle();
+}
+
+// ===========================================================================
+// Contact & subscribe forms
+// ===========================================================================
+
+function initContactForm() {
+    const form = document.getElementById('contactForm');
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const data = {
+            name: form.querySelector('#name').value,
+            email: form.querySelector('#email').value,
+            message: form.querySelector('#message').value
+        };
+
+        try {
+            const result = await withLoadingButton(form.querySelector('button[type="submit"]'), 'Sending...', () =>
+                postJson('/api/contact', data)
+            );
+            showToast(result.message, 'success');
+            form.reset();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
     });
 }
 
-// Initialize animations
-function initAnimations() {
-    // Intersection Observer for scroll animations
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-    };
-    
-    const observer = new IntersectionObserver(function(entries) {
+function initSubscribeForm() {
+    const form = document.querySelector('.subscribe-form');
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        try {
+            const result = await withLoadingButton(form.querySelector('button'), '', () =>
+                postJson('/api/subscribe', { email: form.querySelector('input').value })
+            );
+            showToast(result.message, 'success');
+            form.reset();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    });
+}
+
+// ===========================================================================
+// Scroll reveal animations
+// ===========================================================================
+
+function initRevealAnimations() {
+    revealObserver = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-in');
+                revealObserver.unobserve(entry.target);
             }
         });
-    }, observerOptions);
-    
-    // Observe elements for animation
-    const animateElements = document.querySelectorAll('.about-card, .job-card, .skill-category, .team-card');
-    animateElements.forEach(el => {
-        observer.observe(el);
-    });
-    
-    // Add CSS for animation
-    const style = document.createElement('style');
-    style.textContent = `
-        .about-card, .job-card, .skill-category, .team-card {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        
-        .about-card.animate-in, .job-card.animate-in, .skill-category.animate-in, .team-card.animate-in {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .about-card:nth-child(2) { transition-delay: 0.1s; }
-        .about-card:nth-child(3) { transition-delay: 0.2s; }
-        .about-card:nth-child(4) { transition-delay: 0.3s; }
-        
-        .job-card:nth-child(2) { transition-delay: 0.1s; }
-        .job-card:nth-child(3) { transition-delay: 0.2s; }
-        .job-card:nth-child(4) { transition-delay: 0.3s; }
-        .job-card:nth-child(5) { transition-delay: 0.4s; }
-        .job-card:nth-child(6) { transition-delay: 0.5s; }
-        .job-card:nth-child(7) { transition-delay: 0.6s; }
-        .job-card:nth-child(8) { transition-delay: 0.7s; }
-        
-        .team-card:nth-child(2) { transition-delay: 0.1s; }
-        .team-card:nth-child(3) { transition-delay: 0.2s; }
-        .team-card:nth-child(4) { transition-delay: 0.3s; }
-        
-        .no-jobs {
-            text-align: center;
-            grid-column: 1 / -1;
-            padding: 40px;
-            font-size: 1.2rem;
-            color: var(--gray-color);
-        }
-        
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: var(--dark-color);
-        }
-    `;
-    document.head.appendChild(style);
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.about-card, .skill-category, .team-card')
+        .forEach(el => revealObserver.observe(el));
 }
