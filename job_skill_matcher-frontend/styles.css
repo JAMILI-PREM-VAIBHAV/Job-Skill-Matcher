@@ -280,20 +280,20 @@ header {
 }
 
 .card-1 {
-    top: 20%;
-    left: 10%;
+    top: 5%;
+    left: 5%;
     animation-delay: 0s;
 }
 
 .card-2 {
-    top: 50%;
-    right: 20%;
+    top: 35%;
+    right: 5%;
     animation-delay: 2s;
 }
 
 .card-3 {
-    bottom: 20%;
-    left: 30%;
+    bottom: 5%;
+    left: 20%;
     animation-delay: 4s;
 }
 
@@ -1152,6 +1152,7 @@ header {
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
 }
 
 .apply-btn:hover {
